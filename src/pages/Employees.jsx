@@ -1,43 +1,59 @@
-import React, { useState, useEffect } from 'react';
-import EmployeeForm from '../components/EmployeeForm';
-import EmployeeList from '../components/EmployeeList';
-import API from '../services/api';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
 
-  const fetchEmployees = async () => {
-    setLoading(true);
-    try {
-      const { data } = await API.get('/employees');
-      setEmployees(data);
-    } catch (error) {
-      console.error('Error fetching employees:', error);
-    } finally {
-      setLoading(false);
-    }
+  // ✅ GET API - Fetch employees
+  const fetchEmployees = () => {
+    axios.get("http://localhost:8080/employees")
+      .then(res => setEmployees(res.data))
+      .catch(err => console.log(err));
   };
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
+  // ✅ POST API - Add employee
+  const addEmployee = () => {
+    if (!name) return alert("Enter employee name");
+
+    axios.post("http://localhost:8080/employees", {
+      name: name
+    })
+    .then(() => {
+      alert("Employee Added");
+      setName("");
+      fetchEmployees(); // refresh list
+    })
+    .catch(err => console.log(err));
+  };
+
   return (
-    <div className="animate-fade-in">
-      <div style={{ marginBottom: '2rem' }}>
-        <h2 className="gradient-text">Manage Employees</h2>
-        <p style={{ color: 'var(--text-muted)' }}>Create and view organization members.</p>
-      </div>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 400px) 1fr', gap: '2rem' }}>
-        <div>
-          <EmployeeForm onEmployeeAdded={fetchEmployees} />
-        </div>
-        <div>
-          <EmployeeList employees={employees} loading={loading} />
-        </div>
-      </div>
+    <div>
+      <h2>Employees</h2>
+
+      {/* Add Employee */}
+      <input
+        type="text"
+        placeholder="Enter employee name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <button onClick={addEmployee}>Add</button>
+
+      <hr />
+
+      {/* Display Employees */}
+      {employees.length === 0 ? (
+        <p>No employees found</p>
+      ) : (
+        employees.map(emp => (
+          <p key={emp.id}>{emp.name}</p>
+        ))
+      )}
     </div>
   );
 };
